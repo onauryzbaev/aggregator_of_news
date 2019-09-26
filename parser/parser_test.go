@@ -44,7 +44,6 @@ func TestParse(t *testing.T) {
 	t.Run("Parse rss invalid response", func(t *testing.T) {
 		mockedClient := &mockedHttpClient{}
 		response := &httptest.ResponseRecorder{Code: http.StatusOK}
-		_, _ = response.WriteString(`server error`)
 		mockedClient.
 			On("Get", "http://invalid-xml-rss.ru").
 			Return(response.Result(), nil)
@@ -53,6 +52,109 @@ func TestParse(t *testing.T) {
 		_, err := parser.Parse(repository.Site{Url: "http://invalid-xml-rss.ru", IsRss: true})
 		assert.Error(t, err)
 		assert.Equal(t, "EOF", err.Error())
+	})
+
+	t.Run("Parse html invalid response", func(t *testing.T) {
+		mockedClient := &mockedHttpClient{}
+		response := &httptest.ResponseRecorder{Code: http.StatusOK}
+		mockedClient.
+			On("Get", "http://invalid.ru").
+			Return(response.Result(), nil)
+
+		parser := NewParser(mockedClient)
+		news, err := parser.Parse(repository.Site{Url: "http://invalid.ru", IsRss: false})
+		assert.NoError(t, err)
+		assert.Empty(t, news)
+	})
+
+	t.Run("Parse rss success", func(t *testing.T) {
+		server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+			_, _ = rw.Write([]byte(`<?xml version="1.0" encoding="UTF-8"?>
+				<rss version="2.0">
+					<channel>
+						<item>
+							<title>Заголовок 1</title>
+							<link>https://news.ru/1</link>
+							<description>Описание 1</description>
+							<pubDate>Wed, 25 Sep 2019 18:10:34 +0300</pubDate>
+						</item>
+						<item>
+							<title>Заголовок 2</title>
+							<link>https://news.ru/2</link>
+							<description>Описание 2</description>
+							<image>https://news.ru/2.jpeg</image>
+						</item>
+					</channel>
+				</rss>
+			`))
+		}))
+		defer server.Close()
+
+		parser := NewParser(server.Client())
+		news, err := parser.Parse(repository.Site{Url: server.URL, IsRss: true})
+		assert.NoError(t, err)
+		assert.Len(t, news, 2)
+		assert.Equal(t, news[0], repository.NewsItem{
+			Title:       "Заголовок 1",
+			Description: "Описание 1",
+			Date:        "Wed, 25 Sep 2019 18:10:34 +0300",
+			Link:        "https://news.ru/1",
+		})
+		assert.Equal(t, news[1], repository.NewsItem{
+			Title:       "Заголовок 2",
+			Description: "Описание 2",
+			Link:        "https://news.ru/2",
+			Image:       "https://news.ru/2.jpeg",
+		})
+	})
+
+	t.Run("Parse html success", func(t *testing.T) {
+		server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+			_, _ = rw.Write([]byte(`<!DOCTYPE html>
+				<html>
+					<body>
+						<article class="art">
+							<a href="https://news.ru/1"><h3>Заголовок 1</h3></a>
+							<div class="art-desc">Описание 1</div>
+							<i>Wed, 25 Sep 2019 18:10:34 +0300</i>
+						</article>
+						<article class="art">
+							<a href="https://news.ru/2"><h3>Заголовок 2</h3></a>
+							<div class="art-desc">Описание 2</div>
+							<img src="https://news.ru/2.jpeg"/>
+						</article>
+					</body>
+				</html>
+			`))
+		}))
+		defer server.Close()
+
+		parser := NewParser(server.Client())
+		news, err := parser.Parse(repository.Site{
+			Url:             server.URL,
+			IsRss:           false,
+			NewsItemPath:    "article.art",
+			TitlePath:       "h3",
+			DescriptionPath: ".art-desc",
+			LinkPath:        "a",
+			DatePath:        "",
+			ImagePath:       "img",
+		})
+		assert.NoError(t, err)
+		assert.Len(t, news, 2)
+		assert.Equal(t, news[0], repository.NewsItem{
+			Title:       "Заголовок 1",
+			Description: "Описание 1",
+			Date:        "",
+			Link:        "https://news.ru/1",
+		})
+		assert.Equal(t, news[1], repository.NewsItem{
+			Title:       "Заголовок 2",
+			Description: "Описание 2",
+			Link:        "https://news.ru/2",
+			Date:        "",
+			Image:       "https://news.ru/2.jpeg",
+		})
 	})
 }
 
