@@ -1,24 +1,75 @@
 package repository
 
+import (
+	"fmt"
+	"github.com/jinzhu/gorm"
+)
+
 type Site struct {
 	ID              int
-	IsRss           bool
-	Url             string
-	Name            string
-	NewsItemPath    string
-	TitlePath       string
-	DescriptionPath string
-	LinkPath        string
-	DatePath        string
-	ImagePath       string
+	IsRss           bool   `gorm:"not null"`
+	Url             string `gorm:"size:500;unique;not null"`
+	Name            string `gorm:"size:100;not null"`
+	NewsItemPath    string `gorm:"size:100"`
+	TitlePath       string `gorm:"size:100"`
+	DescriptionPath string `gorm:"size:100"`
+	LinkPath        string `gorm:"size:100"`
+	DatePath        string `gorm:"size:100"`
+	ImagePath       string `gorm:"size:100"`
 }
 
 type NewsItem struct {
 	ID          int
-	SiteID      int
-	Title       string
+	SiteID      int    `gorm:"not null"`
+	Site        Site   `gorm:"foreignkey:SiteRefer;association_autoupdate:false;association_autocreate:false"`
+	Title       string `gorm:"size:250"`
 	Description string
-	Link        string
-	Date        string
-	Image       string
+	Link        string `gorm:"size:500;unique;not null"`
+	Date        string `gorm:"size:100"`
+	Image       string `gorm:"size:500"`
+}
+
+type repository struct {
+	conn *gorm.DB
+}
+
+func NewRepository(conn *gorm.DB) *repository {
+	return &repository{conn}
+}
+
+func (rep *repository) Migrate() {
+	rep.conn.AutoMigrate(&Site{}, &NewsItem{})
+	rep.conn.Model(&NewsItem{}).AddForeignKey("site_id", "sites(id)", "CASCADE", "CASCADE")
+}
+
+func (rep *repository) GetSites() (sites []Site, err error) {
+	err = rep.conn.Find(&sites).Error
+
+	return
+}
+
+func (rep *repository) AddSite(site *Site) error {
+	return rep.conn.Create(site).Error
+}
+
+func (rep *repository) UpdateSite(site Site) error {
+	return rep.conn.Save(&site).Error
+}
+
+func (rep *repository) DeleteSite(id int) error {
+	return rep.conn.Delete(&Site{ID: id}).Error
+}
+
+func (rep *repository) GetNews(offset int, limit int, search string) (news []NewsItem, err error) {
+	q := rep.conn.Offset(offset).Limit(limit)
+	if search != "" {
+		q = q.Where("title LIKE ?", fmt.Sprintf("%%%s%%", search))
+	}
+	err = q.Find(&news).Error
+
+	return
+}
+
+func (rep *repository) AddNewsItem(item *NewsItem) error {
+	return rep.conn.Create(item).Error
 }
