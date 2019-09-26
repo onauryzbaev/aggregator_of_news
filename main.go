@@ -5,10 +5,11 @@ import (
 	"fmt"
 	"github.com/gaus57/news-agg/parser"
 	"github.com/gaus57/news-agg/repository"
+	"net/http"
 )
 
 func main() {
-	p := parser.NewParser()
+	p := parser.NewParser(&http.Client{})
 	//news, err := p.Parse(repository.Site{Url: "https://news.rambler.ru/rss/world/", IsRss: true})
 	//if err != nil {
 	//	panic(err)

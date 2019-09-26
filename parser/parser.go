@@ -10,6 +10,10 @@ import (
 	"net/http"
 )
 
+type HttpClient interface {
+	Get(url string) (*http.Response, error)
+}
+
 type rss struct {
 	XMLName xml.Name `xml:"rss"`
 	Version string   `xml:"version,attr"`
@@ -31,12 +35,12 @@ type item struct {
 }
 
 type parser struct {
-	client *http.Client
+	client HttpClient
 }
 
-func NewParser() *parser {
+func NewParser(client HttpClient) *parser {
 	return &parser{
-		client: &http.Client{},
+		client: client,
 	}
 }
 
@@ -105,11 +109,16 @@ func (parser *parser) parseHtml(
 
 func (parser *parser) parseRss(response *http.Response) (news []repository.NewsItem, err error) {
 	body, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		return
+	}
+
 	rss := &rss{}
 	err = xml.Unmarshal(body, rss)
 	if err != nil {
 		return
 	}
+
 	for _, rssItem := range rss.Channel.Items {
 		news = append(news, repository.NewsItem{
 			Title:       rssItem.Title,
