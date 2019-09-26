@@ -1,16 +1,16 @@
 package repository
 
 type Site struct {
-	ID                 int
-	IsRss              bool
-	Url                string
-	Name               string
-	ItemsContainerPath string
-	TitlePath          string
-	DescriptionPath    string
-	LinkPath           string
-	DatePath           string
-	ImagePath          string
+	ID              int
+	IsRss           bool
+	Url             string
+	Name            string
+	NewsItemPath    string
+	TitlePath       string
+	DescriptionPath string
+	LinkPath        string
+	DatePath        string
+	ImagePath       string
 }
 
 type NewsItem struct {
