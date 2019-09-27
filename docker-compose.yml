@@ -5,7 +5,5 @@ services:
     container_name: "postgres"
     ports:
       - "54320:5432"
-#    volumes:
-#      - my_dbdata:/var/lib/postgresql/data
-#volumes:
-#  my_dbdata:
+    command:
+      - psql -U postgres -c "create database newsagg"

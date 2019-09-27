@@ -9,7 +9,6 @@ type Site struct {
 	ID              int
 	IsRss           bool   `gorm:"not null"`
 	Url             string `gorm:"size:500;unique;not null"`
-	Name            string `gorm:"size:100;not null"`
 	NewsItemPath    string `gorm:"size:100"`
 	TitlePath       string `gorm:"size:100"`
 	DescriptionPath string `gorm:"size:100"`
@@ -43,17 +42,13 @@ func (rep *repository) Migrate() {
 }
 
 func (rep *repository) GetSites() (sites []Site, err error) {
-	err = rep.conn.Find(&sites).Error
+	err = rep.conn.Order("id desc").Find(&sites).Error
 
 	return
 }
 
 func (rep *repository) AddSite(site *Site) error {
-	return rep.conn.Create(site).Error
-}
-
-func (rep *repository) UpdateSite(site Site) error {
-	return rep.conn.Save(&site).Error
+	return rep.conn.FirstOrCreate(site, Site{Url: site.Url}).Error
 }
 
 func (rep *repository) DeleteSite(id int) error {
@@ -61,13 +56,24 @@ func (rep *repository) DeleteSite(id int) error {
 }
 
 func (rep *repository) GetNews(offset int, limit int, search string) (news []NewsItem, err error) {
-	q := rep.conn.Offset(offset).Limit(limit)
+	q := rep.conn.Order("id desc").Offset(offset).Limit(limit)
 	if search != "" {
-		q = q.Where("title LIKE ?", fmt.Sprintf("%%%s%%", search))
+		q = q.Where("title ILIKE ?", fmt.Sprintf("%%%s%%", search))
 	}
 	err = q.Find(&news).Error
 
 	return
+}
+
+func (rep *repository) HasNewsItem(item NewsItem) (bool, error) {
+	q := rep.conn.Where("link = ?", item.Link).First(&NewsItem{})
+	if q.RecordNotFound() {
+		return false, nil
+	} else if q.Error != nil {
+		return false, q.Error
+	}
+
+	return true, nil
 }
 
 func (rep *repository) AddNewsItem(item *NewsItem) error {

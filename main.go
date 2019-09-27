@@ -18,33 +18,11 @@ func main() {
 	}
 	defer db.Close()
 
-	agg := NewAggregator(
+	app := NewApplication(
 		repository.NewRepository(db),
 		parser.NewParser(&http.Client{}),
 		log.New(os.Stdout, "INFO: ", log.Ldate|log.Ltime|log.Lshortfile),
 	)
-	agg.Serve()
-	defer agg.Stop()
-
-	//news, err := p.Parse(repository.Site{Url: "https://news.rambler.ru/rss/world/", IsRss: true})
-	//if err != nil {
-	//	panic(err)
-	//}
-
-	//news, err := p.Parse(repository.Site{
-	//	Url:             "https://www.e1.ru/news/",
-	//	IsRss:           false,
-	//	NewsItemPath:    "article.e1-article_news",
-	//	TitlePath:       ".e1-article__tit",
-	//	DescriptionPath: "",
-	//	LinkPath:        ".e1-article__link",
-	//	DatePath:        ".e1-article__date-text",
-	//	ImagePath:       ".e1-article__img",
-	//})
-	//if err != nil {
-	//	panic(err)
-	//}
-	//
-	//j, _ := json.Marshal(news)
-	//fmt.Println("news", string(j))
+	app.Serve()
+	defer app.Stop()
 }

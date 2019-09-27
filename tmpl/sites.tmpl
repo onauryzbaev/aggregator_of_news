@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Сайты - Агрегатор новостей</title>
+    <style>
+        .wrap {
+            width: 700px;
+            margin: 0 auto;
+        }
+        header::after {
+            content: "";
+            display: block;
+            clear: both;
+        }
+        h1 {
+            margin: 20px 0;
+            line-height: 30px;
+            float: left;
+        }
+        h1 small {
+            margin-left: 10px;
+            font-size: 0.6em;
+        }
+        h1 + a {
+            margin: 20px 10px 20px 0;
+            line-height: 30px;
+            float: right;
+        }
+        .site {
+            margin-bottom: 20px;
+        }
+        .site a {
+            line-height: 20px;
+        }
+        .site form {
+            display: inline;
+        }
+        .site button {
+            display: inline;
+            padding: 0;
+            border: none;
+            box-shadow: none;
+            margin-left: 20px;
+            line-height: 20px;
+            color: darkred;
+            background: none;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+<div class="wrap">
+    <header>
+        <h1>Сайты <small><a href="/sites/add">добавить</a></small></h1>
+        <a href="/">Новости</a>
+    </header>
+    {{range .Sites}}
+        <div class="site">
+            <a target="_blank" href="{{.Url}}">{{.Url}}</a>
+            <form method="post" action="/sites/delete">
+                <input type="hidden" name="id" value="{{.ID}}" />
+                <button type="submit">Удалить</button>
+            </form>
+        </div>
+    {{end}}
+</div>
+</body>
+</html>

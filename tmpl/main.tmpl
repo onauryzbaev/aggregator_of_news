@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Агрегатор новостей</title>
+    <style>
+        .wrap {
+            width: 700px;
+            margin: 0 auto;
+        }
+        header::after {
+            content: "";
+            display: block;
+            clear: both;
+        }
+        h1 {
+            margin: 20px 0;
+            line-height: 30px;
+            float: left;
+        }
+        h1 + a {
+            margin: 20px 10px 20px 0;
+            line-height: 30px;
+            float: right;
+        }
+        .search {
+            margin-bottom: 30px;
+        }
+        .search input {
+            width: 600px;
+            line-height: 30px;
+            padding: 0 10px;
+            box-sizing: border-box;
+        }
+        .search button {
+            width: 90px;
+            line-height: 30px;
+        }
+        article {
+            margin-bottom: 30px;
+        }
+        article h3 {
+            margin: 0 0 5px 0;
+            padding: 0;
+        }
+        article .image {
+            display: inline-block;
+            width: 100px;
+        }
+        article .description {
+            display: inline-block;
+            width: 590px;
+        }
+        .pagination {
+            margin: 50px 0;
+            text-align: center;
+        }
+        .pagination a, .pagination span {
+            margin: 0 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="wrap">
+        <header>
+            <h1>Новости</h1>
+            <a href="/sites">Сайты</a>
+        </header>
+        <form class="search"><input name="q" value="{{.Search}}" /><button type="submit">Поиск</button></form>
+        {{range .NewsItems}}
+            <article>
+                <div class="title">
+                    <i>{{.Date}}</i>
+                    <h3><a target="_blank" href="{{.Link}}">{{.Title}}</a></h3>
+                </div>
+                <div>
+                    <span class="image">{{if .Image}}<img src="{{.Image}}" />{{end}}</span>
+                    <span class="description">{{.Description}}</span>
+                </div>
+            </article>
+        {{end}}
+        <div class="pagination">
+            {{if gt .PrevPage 0}}<a href="?page={{.PrevPage}}&q={{.Search}}"><-</a>{{else}}<span><-</span>{{end}}
+            <span>{{.Page}}</span>
+            <a href="?page={{.NextPage}}&q={{.Search}}">-></a>
+        </div>
+    </div>
+</body>
+</html>

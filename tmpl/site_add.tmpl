@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Сайты - Агрегатор новостей</title>
+    <style>
+        .wrap {
+            width: 700px;
+            margin: 0 auto;
+        }
+        header::after {
+            content: "";
+            display: block;
+            clear: both;
+        }
+        h1 {
+            margin: 20px 0;
+            line-height: 30px;
+            float: left;
+        }
+        h1 + a {
+            margin: 20px 10px 20px 0;
+            line-height: 30px;
+            float: right;
+        }
+        form {
+            margin-bottom: 30px;
+        }
+        form label {
+            display: block;
+        }
+        form input {
+            display: block;
+            margin-bottom: 15px;
+            width: 500px;
+            line-height: 30px;
+            padding: 0 10px;
+            box-sizing: border-box;
+        }
+        form button {
+            line-height: 30px;
+        }
+    </style>
+</head>
+<body>
+<div class="wrap">
+    <header>
+        <h1>Добавить сайт</h1>
+        <a href="/sites">Сайты</a>
+    </header>
+
+    <h2>Rss канал</h2>
+    <form method="post">
+        <input type="hidden" name="is_rss" value="1" />
+
+        <label for="rss-url">Адрес страницы</label>
+        <input id="rss-url" name="url" required />
+
+        <button type="submit">Добавить</button>
+    </form>
+
+    <h2>Html страница</h2>
+    <form method="post">
+        <input type="hidden" name="is_rss" value="0" />
+
+        <label for="html-url">Адрес страницы</label>
+        <input id="html-url" name="url" required />
+
+        <label for="news_item_path">Селектор блока с новостью</label>
+        <input id="news_item_path" name="news_item_path" required />
+
+        <label for="title_path">Селектор заголовка новости</label>
+        <input id="title_path" name="title_path" required />
+
+        <label for="link_path">Селектор ссылки на новость</label>
+        <input id="link_path" name="link_path" required />
+
+        <label for="description_path">Селектор описания новости</label>
+        <input id="description_path" name="description_path" />
+
+        <label for="date_path">Селектор даты публикации новости</label>
+        <input id="date_path" name="date_path" />
+
+        <label for="image_path">Селектор изображения новости</label>
+        <input id="image_path" name="image_path" />
+
+        <button type="submit">Добавить</button>
+    </form>
+</div>
+</body>
+</html>
