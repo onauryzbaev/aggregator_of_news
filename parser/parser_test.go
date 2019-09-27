@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/mock"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"testing"
 )
 
@@ -155,6 +156,30 @@ func TestParse(t *testing.T) {
 			Date:        "",
 			Image:       "https://news.ru/2.jpeg",
 		})
+	})
+}
+
+func TestPrepareLink(t *testing.T) {
+	u := &url.URL{}
+
+	t.Run("Prepare absolute link", func(t *testing.T) {
+		siteUrl, _ := u.Parse("http://site.ru")
+		link := prepareLink(*siteUrl, "http://site.ru/news/1")
+		assert.Equal(t, "http://site.ru/news/1", link)
+	})
+
+	t.Run("Prepare relative link", func(t *testing.T) {
+		siteUrl, _ := u.Parse("http://site.ru")
+		link := prepareLink(*siteUrl, "/news/1")
+		assert.Equal(t, "http://site.ru/news/1", link)
+
+		siteUrl, _ = u.Parse("http://site.ru/news")
+		link = prepareLink(*siteUrl, "1")
+		assert.Equal(t, "http://site.ru/news/1", link)
+
+		siteUrl, _ = u.Parse("http://site.ru/news")
+		link = prepareLink(*siteUrl, "/news/1")
+		assert.Equal(t, "http://site.ru/news/1", link)
 	})
 }
 

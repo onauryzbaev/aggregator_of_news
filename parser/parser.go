@@ -8,6 +8,8 @@ import (
 	"github.com/gaus57/news-agg/repository"
 	"io/ioutil"
 	"net/http"
+	"net/url"
+	"strings"
 )
 
 type HttpClient interface {
@@ -95,11 +97,11 @@ func (parser *parser) parseHtml(
 		}
 		linkSelection := s.Find(linkPath)
 		if link, ok := linkSelection.Attr("href"); ok {
-			item.Link = link
+			item.Link = prepareLink(*response.Request.URL, link)
 		}
 		imageSelection := s.Find(imagePath)
 		if image, ok := imageSelection.Attr("src"); ok {
-			item.Image = image
+			item.Image = prepareLink(*response.Request.URL, image)
 		}
 		news = append(news, item)
 	})
@@ -130,4 +132,24 @@ func (parser *parser) parseRss(response *http.Response) (news []repository.NewsI
 	}
 
 	return
+}
+
+func prepareLink(siteUrl url.URL, link string) string {
+	linkUrl, err := url.Parse(link)
+	if err == nil {
+		if linkUrl.Host == "" {
+			linkUrl.Host = siteUrl.Host
+			linkUrl.Scheme = siteUrl.Scheme
+			if !strings.HasPrefix(link, "/") {
+				if strings.HasSuffix(siteUrl.Path, "/") {
+					linkUrl.Path = siteUrl.Path + link
+				} else {
+					linkUrl.Path = siteUrl.Path + "/" + link
+				}
+			}
+			link = linkUrl.String()
+		}
+	}
+
+	return link
 }

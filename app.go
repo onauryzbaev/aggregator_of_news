@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"github.com/gaus57/news-agg/repository"
 	"io/ioutil"
 	"log"
@@ -29,15 +30,19 @@ type application struct {
 	repository Repository
 	parser     Parser
 	stop       chan bool
+	interval   time.Duration
+	port       int
 	templates  *template.Template
 }
 
-func NewApplication(repository Repository, parser Parser, logger *log.Logger) *application {
+func NewApplication(repository Repository, parser Parser, logger *log.Logger, port int, interval time.Duration) *application {
 	return &application{
 		log:        logger,
 		repository: repository,
 		parser:     parser,
 		stop:       make(chan bool),
+		interval:   interval,
+		port:       port,
 	}
 }
 
@@ -54,7 +59,7 @@ func (app *application) Stop() {
 func (app *application) parsing() {
 	go func() {
 		app.parseSites()
-		ticker := time.NewTicker(time.Minute * 10)
+		ticker := time.NewTicker(app.interval)
 		select {
 		case <-app.stop:
 			return
@@ -128,7 +133,8 @@ func (app *application) serveHttp() {
 	http.HandleFunc("/sites/add", app.siteAddHandler)
 	http.HandleFunc("/sites/delete", app.siteDeleteHandler)
 
-	app.log.Fatal(http.ListenAndServe(":8080", nil))
+	app.log.Printf("Run server listen port :%d", app.port)
+	app.log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", app.port), nil))
 }
 
 func (app *application) mainHandler(res http.ResponseWriter, req *http.Request) {

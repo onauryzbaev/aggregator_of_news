@@ -5,5 +5,3 @@ services:
     container_name: "postgres"
     ports:
       - "54320:5432"
-    command:
-      - psql -U postgres -c "create database newsagg"
