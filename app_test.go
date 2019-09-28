@@ -3,9 +3,13 @@ package main
 import (
 	"errors"
 	"github.com/gaus57/news-agg/repository"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"io/ioutil"
 	"log"
+	"net/http"
+	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
 )
@@ -144,4 +148,174 @@ func TestParsing(t *testing.T) {
 	app.parser.(*mockedParser).AssertNumberOfCalls(t, "Parse", 6)
 	app.repository.(*mockedRepository).AssertNumberOfCalls(t, "HasNewsItem", 8)
 	app.repository.(*mockedRepository).AssertNumberOfCalls(t, "AddNewsItem", 4)
+}
+
+func TestMainHandler(t *testing.T) {
+	app := getApplication()
+	app.prepareTemplates()
+
+	app.repository.(*mockedRepository).
+		On("GetNews", 0, 10, "").
+		Return(
+			[]repository.NewsItem{
+				repository.NewsItem{
+					Title:       "Заголовок 1",
+					Link:        "http://test1.ru/news/1",
+					Description: "описание 1",
+					Date:        "2019-09-27 04:00",
+					Image:       "http://test1.ru/news/1.jpeg",
+				},
+				repository.NewsItem{
+					Title:       "Заголовок 2",
+					Link:        "http://test1.ru/news/2",
+					Description: "описание 2",
+					Date:        "2019-09-27 05:00",
+					Image:       "http://test1.ru/news/2.jpeg",
+				},
+			},
+			nil,
+		)
+	req, _ := http.NewRequest("GET", "/", nil)
+	rr := httptest.NewRecorder()
+	handler := http.HandlerFunc(app.mainHandler)
+	handler.ServeHTTP(rr, req)
+	assert.Equal(t, http.StatusOK, rr.Code)
+	assert.Contains(t, rr.Body.String(), "Заголовок 1")
+	assert.Contains(t, rr.Body.String(), "Заголовок 2")
+
+	app.repository.(*mockedRepository).
+		On("GetNews", 10, 10, "поиск").
+		Return([]repository.NewsItem{}, errors.New("test repository error"))
+	req, _ = http.NewRequest("GET", "/?q=поиск&page=2", nil)
+	rr = httptest.NewRecorder()
+	handler.ServeHTTP(rr, req)
+	assert.Equal(t, http.StatusInternalServerError, rr.Code)
+
+	req, _ = http.NewRequest("GET", "/not-found", nil)
+	rr = httptest.NewRecorder()
+	handler.ServeHTTP(rr, req)
+	assert.Equal(t, http.StatusNotFound, rr.Code)
+}
+
+func TestSitesHandler(t *testing.T) {
+	app := getApplication()
+	app.prepareTemplates()
+
+	app.repository.(*mockedRepository).
+		On("GetSites").
+		Return(
+			[]repository.Site{
+				repository.Site{
+					ID:  1,
+					Url: "http://test1.ru/news/",
+				},
+				repository.Site{
+					ID:  1,
+					Url: "http://test2.ru/news/",
+				},
+			},
+			nil,
+		)
+	req, _ := http.NewRequest("GET", "/sites", nil)
+	rr := httptest.NewRecorder()
+	handler := http.HandlerFunc(app.sitesHandler)
+	handler.ServeHTTP(rr, req)
+	assert.Equal(t, http.StatusOK, rr.Code)
+	assert.Contains(t, rr.Body.String(), "http://test1.ru/news/")
+	assert.Contains(t, rr.Body.String(), "http://test2.ru/news/")
+
+	app = getApplication()
+	app.prepareTemplates()
+	app.repository.(*mockedRepository).
+		On("GetSites").
+		Return([]repository.Site{}, errors.New("test repository error"))
+	req, _ = http.NewRequest("GET", "/sites", nil)
+	rr = httptest.NewRecorder()
+	handler = http.HandlerFunc(app.sitesHandler)
+	handler.ServeHTTP(rr, req)
+	assert.Equal(t, http.StatusInternalServerError, rr.Code)
+}
+
+func TestSiteDeleteHandler(t *testing.T) {
+	app := getApplication()
+	app.prepareTemplates()
+
+	app.repository.(*mockedRepository).
+		On("DeleteSite", 1).
+		Return(nil)
+	reader := strings.NewReader("id=1")
+	req, _ := http.NewRequest("POST", "/sites/delete", reader)
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	rr := httptest.NewRecorder()
+	handler := http.HandlerFunc(app.siteDeleteHandler)
+	handler.ServeHTTP(rr, req)
+	assert.Equal(t, http.StatusTemporaryRedirect, rr.Code)
+	app.repository.(*mockedRepository).AssertNumberOfCalls(t, "DeleteSite", 1)
+
+	app.repository.(*mockedRepository).
+		On("DeleteSite", 2).
+		Return(errors.New("test repository error"))
+	reader = strings.NewReader("id=2")
+	req, _ = http.NewRequest("POST", "/sites/delete", reader)
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	rr = httptest.NewRecorder()
+	handler.ServeHTTP(rr, req)
+	assert.Equal(t, http.StatusInternalServerError, rr.Code)
+	app.repository.(*mockedRepository).AssertNumberOfCalls(t, "DeleteSite", 2)
+
+	reader = strings.NewReader("id=invalid")
+	req, _ = http.NewRequest("POST", "/sites/delete", reader)
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	rr = httptest.NewRecorder()
+	handler.ServeHTTP(rr, req)
+	assert.Equal(t, http.StatusTemporaryRedirect, rr.Code)
+	app.repository.(*mockedRepository).AssertNumberOfCalls(t, "DeleteSite", 2)
+
+	req, _ = http.NewRequest("GET", "/sites/delete", nil)
+	rr = httptest.NewRecorder()
+	handler.ServeHTTP(rr, req)
+	assert.Equal(t, http.StatusMethodNotAllowed, rr.Code)
+}
+
+func TestSiteAddHandler(t *testing.T) {
+	app := getApplication()
+	app.prepareTemplates()
+
+	req, _ := http.NewRequest("GET", "/sites/add", nil)
+	rr := httptest.NewRecorder()
+	handler := http.HandlerFunc(app.siteAddHandler)
+	handler.ServeHTTP(rr, req)
+	assert.Equal(t, http.StatusOK, rr.Code)
+	assert.Contains(t, rr.Body.String(), "Добавить сайт")
+
+	app.repository.(*mockedRepository).
+		On("AddSite", &repository.Site{Url: "http://test1.ru", IsRss: true}).
+		Return(nil)
+	reader := strings.NewReader("url=http://test1.ru;is_rss=1")
+	req, _ = http.NewRequest("POST", "/sites/add", reader)
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	rr = httptest.NewRecorder()
+	handler.ServeHTTP(rr, req)
+	assert.Equal(t, http.StatusTemporaryRedirect, rr.Code)
+	app.repository.(*mockedRepository).AssertNumberOfCalls(t, "AddSite", 1)
+
+	app.repository.(*mockedRepository).
+		On("AddSite", &repository.Site{
+			Url:             "http://test2.ru",
+			IsRss:           false,
+			NewsItemPath:    "article",
+			TitlePath:       "h3",
+			DescriptionPath: ".desc",
+			LinkPath:        "a",
+			DatePath:        "i",
+			ImagePath:       "img",
+		}).
+		Return(errors.New("test repository error"))
+	reader = strings.NewReader("url=http://test2.ru;is_rss=0;news_item_path=article;title_path=h3;description_path=.desc;link_path=a;date_path=i;image_path=img")
+	req, _ = http.NewRequest("POST", "/sites/add", reader)
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	rr = httptest.NewRecorder()
+	handler.ServeHTTP(rr, req)
+	assert.Equal(t, http.StatusInternalServerError, rr.Code)
+	app.repository.(*mockedRepository).AssertNumberOfCalls(t, "AddSite", 2)
 }
