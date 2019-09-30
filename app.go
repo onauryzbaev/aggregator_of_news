@@ -60,11 +60,13 @@ func (app *application) parsing() {
 	go func() {
 		app.parseSites()
 		ticker := time.NewTicker(app.interval)
-		select {
-		case <-app.stop:
-			return
-		case <-ticker.C:
-			app.parseSites()
+		for {
+			select {
+			case <-app.stop:
+				return
+			case <-ticker.C:
+				app.parseSites()
+			}
 		}
 	}()
 }

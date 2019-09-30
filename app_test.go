@@ -141,13 +141,19 @@ func TestParsing(t *testing.T) {
 	app.repository.(*mockedRepository).AssertNumberOfCalls(t, "HasNewsItem", 8)
 	app.repository.(*mockedRepository).AssertNumberOfCalls(t, "AddNewsItem", 4)
 
+	time.Sleep(app.interval)
+
+	app.parser.(*mockedParser).AssertNumberOfCalls(t, "Parse", 9)
+	app.repository.(*mockedRepository).AssertNumberOfCalls(t, "HasNewsItem", 12)
+	app.repository.(*mockedRepository).AssertNumberOfCalls(t, "AddNewsItem", 6)
+
 	app.Stop()
 
 	time.Sleep(app.interval)
 
-	app.parser.(*mockedParser).AssertNumberOfCalls(t, "Parse", 6)
-	app.repository.(*mockedRepository).AssertNumberOfCalls(t, "HasNewsItem", 8)
-	app.repository.(*mockedRepository).AssertNumberOfCalls(t, "AddNewsItem", 4)
+	app.parser.(*mockedParser).AssertNumberOfCalls(t, "Parse", 9)
+	app.repository.(*mockedRepository).AssertNumberOfCalls(t, "HasNewsItem", 12)
+	app.repository.(*mockedRepository).AssertNumberOfCalls(t, "AddNewsItem", 6)
 }
 
 func TestMainHandler(t *testing.T) {
