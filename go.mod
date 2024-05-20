@@ -1,4 +1,4 @@
-module github.com/onauryzbaev/go_news_final
+module github.com/onauryzbaev/go_news_final_
 
 go 1.13
 
