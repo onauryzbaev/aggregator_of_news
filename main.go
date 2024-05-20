@@ -8,8 +8,8 @@ import (
 	"os"
 	"time"
 
-	"github.com/gaus57/news-agg/parser"
-	"github.com/gaus57/news-agg/repository"
+	"github.com/onauryzbaev/go_news_final_/parser"
+	"github.com/onauryzbaev/go_news_final_/repository"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/postgres"
 )
