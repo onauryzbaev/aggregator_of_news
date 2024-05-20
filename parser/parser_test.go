@@ -2,7 +2,7 @@ package parser
 
 import (
 	"errors"
-	"github.com/onauryzbaev/go_news_final_/tree/master/repository"
+	"github.com/onauryzbaev/go_news_final_/repository"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"net/http"
