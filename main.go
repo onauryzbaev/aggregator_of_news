@@ -3,14 +3,15 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/gaus57/news-agg/parser"
-	"github.com/gaus57/news-agg/repository"
-	"github.com/jinzhu/gorm"
-	_ "github.com/jinzhu/gorm/dialects/postgres"
 	"log"
 	"net/http"
 	"os"
 	"time"
+
+	"github.com/gaus57/news-agg/parser"
+	"github.com/gaus57/news-agg/repository"
+	"github.com/jinzhu/gorm"
+	_ "github.com/jinzhu/gorm/dialects/postgres"
 )
 
 func main() {
