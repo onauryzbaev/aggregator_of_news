@@ -2,13 +2,14 @@ package main
 
 import (
 	"fmt"
-	"github.com/gaus57/news-agg/repository"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"strconv"
 	"text/template"
 	"time"
+
+	"github.com/onauryzbaev/go_news_final_/tree/master/repository"
 )
 
 type Repository interface {

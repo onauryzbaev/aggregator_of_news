@@ -1,4 +1,4 @@
-module github.com/gaus57/news-agg
+module github.com/onauryzbaev/go_news_final
 
 go 1.13
 
@@ -8,4 +8,4 @@ require (
 	github.com/stretchr/testify v1.4.0
 )
 
-replace github.com/gaus57/news-agg => ./
+replace github.com/onauryzbaev/go_news_fina => ./

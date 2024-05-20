@@ -2,7 +2,7 @@ package main
 
 import (
 	"errors"
-	"github.com/gaus57/news-agg/repository"
+	"github.com/onauryzbaev/go_news_final_/tree/master/repository"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"io/ioutil"
