@@ -9,7 +9,7 @@ import (
 	"text/template"
 	"time"
 
-	"github.com/onauryzbaev/go_news_final_/tree/master/repository"
+	"github.com/onauryzbaev/go_news_final_/repository"
 )
 
 type Repository interface {
