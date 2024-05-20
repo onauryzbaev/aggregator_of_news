@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/PuerkitoBio/goquery"
-	"github.com/gaus57/news-agg/repository"
+	"github.com/onauryzbaev/go_news_final_/repository"
 	"io/ioutil"
 	"net/http"
 	"net/url"
